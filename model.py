@@ -45,27 +45,27 @@ y_preserved = y.copy()
 def get_attack_type_downsampled_balanced_subset(attack_names, label, X, y):
     print('Attack group name: {}'.format(label))
     print('Attack_types: {}'.format(', '.join(attack_names)))
-    
+
     is_type_attack = y.isin(attack_names)
-    
+
     only_attack_type = y[is_type_attack]
     only_not_attack_type = y[~is_type_attack]
-    
+
     only_attack_type = is_type_attack[is_type_attack]
     only_not_attack_type = is_type_attack[~is_type_attack]
-    
-    
+
+
     num_attack_type = only_attack_type.shape[0]
     num_not_attack_type = only_not_attack_type.shape[0]
-    
+
     print('Num attack type: {}'.format(num_attack_type))
     print('Num not attack type: {}'.format(num_not_attack_type))
-    
+
 
     # Take a balanced sample
     # which one has less? that is the one we should downsample
     lowest_count = min(num_attack_type, num_not_attack_type)
-    
+
     balanced_ys = []
     balanced_Xs = []
     for subset_y in [only_attack_type, only_not_attack_type]:
@@ -75,20 +75,20 @@ def get_attack_type_downsampled_balanced_subset(attack_names, label, X, y):
         subset_X = X.loc[_subset_y.index, :]
         balanced_Xs.append(subset_X)
         balanced_ys.append(_subset_y)
-    
+
     assert len(balanced_Xs) == len(balanced_ys)
-    
+
     for i, balanced_y in enumerate(balanced_ys):
         assert balanced_y.shape[0] == lowest_count
         assert balanced_Xs[i].shape[0] == lowest_count
-        
+
     X_new = pd.concat(balanced_Xs)
     y_new = pd.concat(balanced_ys).rename(label)
-    
+
     print(X_new.shape[0])
     print(y_new.shape[0])
     print()
-    
+
     return X_new, y_new
 
 X_is_dos, y_is_dos = get_attack_type_downsampled_balanced_subset(attack_type_groups['dos'], 'is_dos_attack', X, y)
@@ -170,16 +170,16 @@ for classifier in classifiers:
     y_score = clf.predict_proba(X_test)[:,1]
 
     y_pred = clf.predict(X_test)
-    
+
     roc_auc = roc_auc_score(y_test, y_score)
     fpr, tpr, _ = roc_curve(y_test, y_score)
     roc_things.append((fpr, tpr, '{} AUC: {:.3f}'.format(classifier_name, roc_auc)))
-    
+
     precision, recall, thresholds = precision_recall_curve(y_test, y_score)
     pr_auc = auc(recall, precision)
     precision_recall_things.append((recall, precision, thresholds, '{} AUC: {:.3f}'.format(classifier_name, pr_auc)))
     #plot_precision_recall_curve(clf, X_test, y_test)
-    
+
     print(confusion_matrix(y_test, y_pred))
     print(classification_report(y_test, y_pred))
 
